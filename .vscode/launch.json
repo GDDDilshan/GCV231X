@@ -1,0 +1,40 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "🚀 0. Launch Desktop GUI App (app.py)",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/app.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "1. Run Attendance Engine (sams.py)",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/sams.py",
+            "args": ["sample_images/12.07.2019.png", "info.xml"],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "2. Run Visualization (infovis.py)",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/infovis.py",
+            "args": ["10000409"],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "3. Run Signature Verification (investigate.py)",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/investigate.py",
+            "args": ["10000409"],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
