@@ -1,0 +1,28 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# IDE & Editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python virtual environments
+venv/
+env/
+ENV/
+.env
+
+# Temporary artifacts & scratch files
+scratch/
+.tempmediaStorage/
+.user_uploaded/
