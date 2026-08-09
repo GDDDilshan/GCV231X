@@ -8,6 +8,36 @@ class SignatureVerifier:
         self.orb = cv2.ORB_create(nfeatures=500)
         self.bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
 
+    def calculate_ssim(self, img1, img2):
+        """
+        Compute Structural Similarity Index (SSIM) between two signature images.
+        """
+        # Resize both images to standard size 200x80
+        target_size = (200, 80)
+        g1 = cv2.resize(cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY) if len(img1.shape) == 3 else img1, target_size)
+        g2 = cv2.resize(cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY) if len(img2.shape) == 3 else img2, target_size)
+
+        # SSIM calculation formula constants
+        C1 = (0.01 * 255) ** 2
+        C2 = (0.03 * 255) ** 2
+
+        img1_f = g1.astype(np.float64)
+        img2_f = g2.astype(np.float64)
+
+        mu1 = cv2.GaussianBlur(img1_f, (11, 11), 1.5)
+        mu2 = cv2.GaussianBlur(img2_f, (11, 11), 1.5)
+
+        mu1_sq = mu1 ** 2
+        mu2_sq = mu2 ** 2
+        mu1_mu2 = mu1 * mu2
+
+        sigma1_sq = cv2.GaussianBlur(img1_f ** 2, (11, 11), 1.5) - mu1_sq
+        sigma2_sq = cv2.GaussianBlur(img2_f ** 2, (11, 11), 1.5) - mu2_sq
+        sigma12 = cv2.GaussianBlur(img1_f * img2_f, (11, 11), 1.5) - mu1_mu2
+
+        ssim_map = ((2 * mu1_mu2 + C1) * (2 * sigma12 + C2)) / ((mu1_sq + mu2_sq + C1) * (sigma1_sq + sigma2_sq + C2))
+        return float(ssim_map.mean())
+
     def extract_stroke_features(self, img):
         """Extract padded stroke features, aspect ratio, and contour complexity."""
         if img is None or img.size == 0:
