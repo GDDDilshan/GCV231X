@@ -109,7 +109,21 @@ class SignatureVerifier:
             sift_c = len(good)
 
 
-        return 0.0, 0.0, sift_c, 0.0
+        h_corr = float(np.corrcoef(f1['h_proj'], f2['h_proj'])[0, 1]) if np.std(f1['h_proj']) > 0 and np.std(f2['h_proj']) > 0 else 0.0
+        v_corr = float(np.corrcoef(f1['v_proj'], f2['v_proj'])[0, 1]) if np.std(f1['v_proj']) > 0 and np.std(f2['v_proj']) > 0 else 0.0
+        proj = max(0.0, (h_corr + v_corr) / 2.0)
+
+        C1, C2 = (0.01 * 255) ** 2, (0.03 * 255) ** 2
+        g1, g2 = f1['padded'].astype(np.float64), f2['padded'].astype(np.float64)
+        mu1, mu2 = cv2.GaussianBlur(g1, (11, 11), 1.5), cv2.GaussianBlur(g2, (11, 11), 1.5)
+        mu1_sq, mu2_sq, mu1_mu2 = mu1**2, mu2**2, mu1*mu2
+        sigma1_sq = cv2.GaussianBlur(g1**2, (11, 11), 1.5) - mu1_sq
+        sigma2_sq = cv2.GaussianBlur(g2**2, (11, 11), 1.5) - mu2_sq
+        sigma12 = cv2.GaussianBlur(g1*g2, (11, 11), 1.5) - mu1_mu2
+        stroke_ssim = float((((2*mu1_mu2 + C1)*(2*sigma12 + C2)) / ((mu1_sq + mu2_sq + C1)*(sigma1_sq + sigma2_sq + C2))).mean())
+
+        conf = (stroke_ssim * 0.40) + (proj * 0.40) + (min(1.0, sift_c / 10.0) * 0.20)
+        return conf * 100.0, stroke_ssim, sift_c, proj
 
     def verify_signature(self, query_img, template_img_or_list):
         """
