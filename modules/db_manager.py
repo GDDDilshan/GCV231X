@@ -132,3 +132,49 @@ class DatabaseManager:
         conn.commit()
         conn.close()
         return session_id
+
+    def get_student_info(self, student_index):
+        """Fetch student details."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT student_index, name, title, batch FROM students WHERE student_index = ?", (student_index,))
+        row = cursor.fetchone()
+        conn.close()
+        if row:
+            return {"student_index": row[0], "name": row[1], "title": row[2], "batch": row[3]}
+        return None
+
+    def get_student_attendance_history(self, student_index):
+        """Fetch attendance history across all sessions for a given student."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT s.session_date, s.time_range, s.lecturer_name, a.status, a.ink_density, a.cropped_signature_path
+            FROM attendance a
+            JOIN sessions s ON a.session_id = s.session_id
+            WHERE a.student_index = ?
+            ORDER BY s.session_date ASC
+        """, (student_index,))
+        rows = cursor.fetchall()
+        conn.close()
+
+        history = []
+        for row in rows:
+            history.append({
+                "date": row[0],
+                "time": row[1],
+                "lecturer": row[2],
+                "status": row[3],
+                "ink_density": row[4],
+                "signature_path": row[5]
+            })
+        return history
+
+    def get_all_student_indices(self):
+        """Get list of all student indices."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT student_index FROM students")
+        rows = cursor.fetchall()
+        conn.close()
+        return [r[0] for r in rows]
