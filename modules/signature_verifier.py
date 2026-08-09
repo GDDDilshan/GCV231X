@@ -158,8 +158,8 @@ class SignatureVerifier:
             if conf > best_conf:
                 best_conf, best_ssim, best_sift, best_proj = conf, ssim, sift_c, proj
 
-        is_match = False
-        verdict = ""
+        is_match = (best_sift >= 3 or best_conf >= 45.0)
+        verdict = "AUTHENTIC MATCH" if is_match else "SUSPECTED MISMATCH / FRAUD"
 
 
 
