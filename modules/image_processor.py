@@ -283,6 +283,12 @@ def _make_cells(self, img, borders, sig_x1, sig_x2, w, h):
 
 
 
+def _draw_grid_overlay(self, img, rows_cells):
+        overlay = img.copy()
+        for item in rows_cells:
+            x, y, w, h = item['bbox']
+            cv2.rectangle(overlay, (x, y), (x + w, y + h), (255, 100, 0), 2)
+        return overlay
 
 
 
