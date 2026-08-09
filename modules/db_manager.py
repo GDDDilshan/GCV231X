@@ -178,3 +178,23 @@ class DatabaseManager:
         rows = cursor.fetchall()
         conn.close()
         return [r[0] for r in rows]
+
+    def register_signature_template(self, student_index, template_path):
+        """Register a reference signature template for verification."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO signature_templates (student_index, template_path)
+            VALUES (?, ?)
+        """, (student_index, template_path))
+        conn.commit()
+        conn.close()
+
+    def get_signature_templates(self, student_index):
+        """Get baseline signature template paths for a student."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT template_path FROM signature_templates WHERE student_index = ?", (student_index,))
+        rows = cursor.fetchall()
+        conn.close()
+        return [r[0] for r in rows]
