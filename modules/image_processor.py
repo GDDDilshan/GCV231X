@@ -138,6 +138,103 @@ class ImageProcessor:
     
 
 
+def _find_table_row_borders(self, gray_img):
+        """
+        Detect horizontal table grid lines using adaptive threshold + morphological ops.
+        Returns list of y-coordinates marking row boundaries (sorted ascending).
+        """
+        h, w = gray_img.shape[:2]
+
+        # Adaptive threshold to reveal thin light-gray table lines
+        thresh = cv2.adaptiveThreshold(
+            gray_img, 255,
+            cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+            cv2.THRESH_BINARY_INV, 15, 5
+        )
+
+        # Horizontal morphological kernel – must be at least 1/5 image width wide
+        kernel_len = max(30, w // 5)
+        horiz_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (kernel_len, 1))
+        horiz = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, horiz_kernel, iterations=1)
+
+        # Row-sum profile
+        row_sums = np.sum(horiz > 0, axis=1).astype(float)
+
+        # Cluster peaks into single y-positions
+        min_sum = 8
+        borders = []
+        in_peak = False
+        group   = []
+        for y in range(h):
+            if row_sums[y] >= min_sum:
+                in_peak = True
+                group.append(y)
+            else:
+                if in_peak and group:
+                    borders.append(int(np.mean(group)))
+                    group = []
+                in_peak = False
+        if group:
+            borders.append(int(np.mean(group)))
+
+        return sorted(borders)
+
+def _extract_table_signature_cells(self, aligned_img, binary_img, num_students=6):
+        """
+        Extract the signature box ROI for each student row using adaptive line detection.
+        """
+        h, w  = aligned_img.shape[:2]
+        gray  = cv2.cvtColor(aligned_img, cv2.COLOR_BGR2GRAY)
+
+# Signature column: rightmost ~30% of image
+        sig_x1 = int(w * 0.68)
+        sig_x2 = int(w * 0.97)
+
+        # --- Adaptive detection ---
+        borders = self._find_table_row_borders(gray)
+
+        # We want borders in the student-table region (roughly 28%–58% of height)
+        y_min = int(h * 0.27)
+        y_max = int(h * 0.60)
+        region_borders = [y for y in borders if y_min <= y <= y_max]
+
+        # Need at least num_students+2 borders to skip header rows
+        # The table has: [date/lecturer header] | [col-names row] | [6 student rows]
+        # i.e. 9 horizontal lines total: 1+1+6 = 8 rows → 9 borders
+        # We skip the first 2 borders (date/lecturer section + col-names bottom)
+        # and use the next num_students+1 borders as student row boundaries
+
+        if len(region_borders) >= num_students + 2:
+            # Skip first border (very top of table) and second border (col-names bottom)
+            student_borders = region_borders[2:2 + num_students + 1]
+            if len(student_borders) == num_students + 1:
+                return self._make_cells(aligned_img, student_borders, sig_x1, sig_x2, w, h)
+
+        # --- Fallback: fixed-ratio positions calibrated for native 768x1024 phone photos ---
+        # Peaks detected at: [331, 349, 384, 408, 429, 450, 471, 493, 514, 536]
+        # Skip: 331 (outer header top), 349 (col-names row top), 384 (col-names row bottom)
+        # Student rows start at y=408 (index [3] in peaks list)
+        # 7 borders = [row1_top, row1_bot, row2_bot, row3_bot, row4_bot, row5_bot, row6_bot]
+        fallback_fracs = [0.3984, 0.4189, 0.4395, 0.4600, 0.4814, 0.5020, 0.5234]
+        fallback_borders = [int(h * f) for f in fallback_fracs]
+
+
+        return self._make_cells(aligned_img, fallback_borders, sig_x1, sig_x2, w, h)
+
+def _make_cells(self, img, borders, sig_x1, sig_x2, w, h):
+        cells = []
+        for i in range(len(borders) - 1):
+            y1 = max(0, borders[i]     + 3)
+            y2 = min(h, borders[i + 1] - 3)
+            x1 = max(0, sig_x1 + 4)
+            x2 = min(w, sig_x2 - 4)
+            crop = img[y1:y2, x1:x2]
+            cells.append({
+                'row_index':      i,
+                'signature_crop': crop,
+                'bbox':           (x1, y1, x2 - x1, y2 - y1),
+            })
+        return cells
 
 
 
