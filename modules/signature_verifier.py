@@ -117,14 +117,26 @@ class SignatureVerifier:
         """
         f_q = self.extract_stroke_features(query_img)
         if f_q is None:
-            return None
+            return {
+                "verdict": "ABSENT (NO SIGNATURE)",
+                "ssim_score": 0.0,
+                "orb_matches": 0,
+                "confidence": 0.0,
+                "is_match": False
+            }
 
         templates = template_img_or_list if isinstance(template_img_or_list, list) else [template_img_or_list]
         template_features = [self.extract_stroke_features(t) for t in templates]
         template_features = [tf for tf in template_features if tf is not None]
 
         if not template_features:
-            return None
+            return {
+                "verdict": "ABSENT (NO SIGNATURE)",
+                "ssim_score": 0.0,
+                "orb_matches": 0,
+                "confidence": 0.0,
+                "is_match": False
+            }
 
         best_conf, best_ssim, best_sift, best_proj = 0.0, 0.0, 0, 0.0
         for f_b in template_features:
