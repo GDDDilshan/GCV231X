@@ -70,6 +70,9 @@ class ImageProcessor:
 
 
 
+# Step 4: Table Grid Detection & Cell Crop
+        rows_cells = self._extract_table_signature_cells(self.original_image, self.binary, expected_students)
+        self.processing_steps['04_Grid_Detection'] = self._draw_grid_overlay(self.original_image, rows_cells)
 
 
 
