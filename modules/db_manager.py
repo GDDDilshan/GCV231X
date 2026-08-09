@@ -97,3 +97,38 @@ class DatabaseManager:
         conn.commit()
         conn.close()
         return synced_count
+
+    def save_session_attendance(self, session_date, time_range, lecturer_name, image_source, attendance_results):
+        """
+        Save or update attendance for a session.
+        attendance_results: list of dicts: [{'student_index': '10000409', 'status': 'PRESENT', 'ink_density': 0.045, 'crop_path': '...'}, ...]
+        """
+        conn = self._get_connection()
+        cursor = conn.cursor()
+
+        # Insert or get session
+        cursor.execute("""
+            INSERT INTO sessions (session_date, time_range, lecturer_name, image_source)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(image_source) DO UPDATE SET
+                session_date=excluded.session_date,
+                time_range=excluded.time_range,
+                lecturer_name=excluded.lecturer_name
+        """, (session_date, time_range, lecturer_name, os.path.basename(image_source)))
+
+        cursor.execute("SELECT session_id FROM sessions WHERE image_source = ?", (os.path.basename(image_source),))
+        session_id = cursor.fetchone()[0]
+
+        # Clear previous attendance records for this session if re-running
+        cursor.execute("DELETE FROM attendance WHERE session_id = ?", (session_id,))
+
+        # Insert attendance rows
+        for item in attendance_results:
+            cursor.execute("""
+                INSERT INTO attendance (session_id, student_index, status, ink_density, cropped_signature_path)
+                VALUES (?, ?, ?, ?, ?)
+            """, (session_id, item['student_index'], item['status'], item.get('ink_density', 0.0), item.get('crop_path', '')))
+
+        conn.commit()
+        conn.close()
+        return session_id
