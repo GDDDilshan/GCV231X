@@ -132,3 +132,149 @@ class ImageProcessor:
 
         self.processing_steps['05_Final_Detection'] = annotated
         return results
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def _analyze_signature_cell(self, crop_img):
+        """
+        Analyze cell crop for pen-ink presence.
+        Returns (density_ratio, is_present, status_string).
+        """
+        if crop_img is None or crop_img.size == 0:
+            return 0.0, False, "ABSENT"
+
+        h, w = crop_img.shape[:2]
+        total = float(h * w)
+        if total == 0:
+            return 0.0, False, "ABSENT"
+
+        gray_crop = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
+
+        # 1. Variance — blank cells are uniform white (low variance)
+        variance = float(np.var(gray_crop))
+
+        # 2. Blue ink detection (HSV)
+        hsv = cv2.cvtColor(crop_img, cv2.COLOR_BGR2HSV)
+        blue_mask = cv2.inRange(hsv,
+                                np.array([90,  30,  50]),
+                                np.array([140, 255, 255]))
+        blue_ratio = float(np.sum(blue_mask > 0)) / total
+
+        # 3. Dark stroke detection
+        _, dark_mask = cv2.threshold(gray_crop, 100, 255, cv2.THRESH_BINARY_INV)
+        k = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2))
+        dark_clean = cv2.morphologyEx(dark_mask, cv2.MORPH_OPEN, k)
+        dark_ratio = float(np.sum(dark_clean > 0)) / total
+
+        # Combined density metric
+        density = max(blue_ratio, dark_ratio * 0.5)
+
+        # Decision: high variance + dark strokes, or detected blue ink
+        is_present = (variance > 400 and dark_ratio > 0.015) or (blue_ratio > 0.005)
+        status     = "PRESENT" if is_present else "ABSENT"
+        return density, is_present, status
