@@ -107,7 +107,7 @@ class SignatureVerifier:
             bf = cv2.BFMatcher()
             matches = bf.knnMatch(des1, des2, k=2)
             good = [m for m_p in matches if len(m_p) == 2 for m, n in [m_p] if m.distance < 0.75 * n.distance]
-            sift_c = len(good)
+            sift_c = len(good) 
 
 
         h_corr = float(np.corrcoef(f1['h_proj'], f2['h_proj'])[0, 1]) if np.std(f1['h_proj']) > 0 and np.std(f2['h_proj']) > 0 else 0.0
