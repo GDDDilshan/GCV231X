@@ -4,9 +4,10 @@ import os
 from modules.config import SSIM_SIMILARITY_THRESHOLD, ORB_MATCH_THRESHOLD
 
 class SignatureVerifier:
-    def __init__(self):
+   def __init__(self):
         self.orb = cv2.ORB_create(nfeatures=500)
         self.bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+
 
     def calculate_ssim(self, img1, img2):
         """
