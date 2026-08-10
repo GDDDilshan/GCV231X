@@ -28,6 +28,7 @@ GROUND_TRUTH_INK_RATIOS = {
     '28.06.2019': [0.0815, 0.0000, 0.0000, 0.0778, 0.0921, 0.0703],
 }
 
+
 class ImageProcessor:
     def __init__(self, image_path):
         self.image_path = image_path
@@ -64,20 +65,16 @@ class ImageProcessor:
         self.gray = cv2.cvtColor(self.original_image, cv2.COLOR_BGR2GRAY)
         self.processing_steps['02_Grayscale'] = cv2.cvtColor(self.gray, cv2.COLOR_GRAY2BGR)
 
+        # Step 3: Binarization / Thresholding using Otsu method
+        blurred = cv2.GaussianBlur(self.gray, (5, 5), 0)
+        _, self.binary = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+        self.processing_steps['03_Binarized'] = cv2.cvtColor(self.binary, cv2.COLOR_GRAY2BGR)
 
-
-
-
-
-
-# Step 4: Table Grid Detection & Cell Crop
+        # Step 4: Table Grid Detection & Cell Crop
         rows_cells = self._extract_table_signature_cells(self.original_image, self.binary, expected_students)
         self.processing_steps['04_Grid_Detection'] = self._draw_grid_overlay(self.original_image, rows_cells)
 
-
-
-
-# Step 5: Attendance Analysis per Cell
+        # Step 5: Attendance Analysis per Cell
         annotated = self.original_image.copy()
         results = []
 
@@ -135,10 +132,13 @@ class ImageProcessor:
 
         self.processing_steps['05_Final_Detection'] = annotated
         return results
-    
 
 
-def _find_table_row_borders(self, gray_img):
+    # ------------------------------------------------------------------
+    # Table Row Extraction
+    # ------------------------------------------------------------------
+
+    def _find_table_row_borders(self, gray_img):
         """
         Detect horizontal table grid lines using adaptive threshold + morphological ops.
         Returns list of y-coordinates marking row boundaries (sorted ascending).
@@ -179,14 +179,14 @@ def _find_table_row_borders(self, gray_img):
 
         return sorted(borders)
 
-def _extract_table_signature_cells(self, aligned_img, binary_img, num_students=6):
+    def _extract_table_signature_cells(self, aligned_img, binary_img, num_students=6):
         """
         Extract the signature box ROI for each student row using adaptive line detection.
         """
         h, w  = aligned_img.shape[:2]
         gray  = cv2.cvtColor(aligned_img, cv2.COLOR_BGR2GRAY)
 
-# Signature column: rightmost ~30% of image
+        # Signature column: rightmost ~30% of image
         sig_x1 = int(w * 0.68)
         sig_x2 = int(w * 0.97)
 
@@ -221,7 +221,7 @@ def _extract_table_signature_cells(self, aligned_img, binary_img, num_students=6
 
         return self._make_cells(aligned_img, fallback_borders, sig_x1, sig_x2, w, h)
 
-def _make_cells(self, img, borders, sig_x1, sig_x2, w, h):
+    def _make_cells(self, img, borders, sig_x1, sig_x2, w, h):
         cells = []
         for i in range(len(borders) - 1):
             y1 = max(0, borders[i]     + 3)
@@ -236,117 +236,11 @@ def _make_cells(self, img, borders, sig_x1, sig_x2, w, h):
             })
         return cells
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-def _draw_grid_overlay(self, img, rows_cells):
-        overlay = img.copy()
-        for item in rows_cells:
-            x, y, w, h = item['bbox']
-            cv2.rectangle(overlay, (x, y), (x + w, y + h), (255, 100, 0), 2)
-        return overlay
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-def _analyze_signature_cell(self, crop_img):
+    # ------------------------------------------------------------------
+    # Signature Analysis
+    # ------------------------------------------------------------------
+
+    def _analyze_signature_cell(self, crop_img):
         """
         Analyze cell crop for pen-ink presence.
         Returns (density_ratio, is_present, status_string).
@@ -384,3 +278,23 @@ def _analyze_signature_cell(self, crop_img):
         is_present = (variance > 400 and dark_ratio > 0.015) or (blue_ratio > 0.005)
         status     = "PRESENT" if is_present else "ABSENT"
         return density, is_present, status
+
+    # ------------------------------------------------------------------
+    # Visualization
+    # ------------------------------------------------------------------
+
+    def _draw_grid_overlay(self, img, rows_cells):
+        overlay = img.copy()
+        for item in rows_cells:
+            x, y, w, h = item['bbox']
+            cv2.rectangle(overlay, (x, y), (x + w, y + h), (255, 100, 0), 2)
+        return overlay
+
+    def save_step_visualizations(self, output_prefix="step"):
+        """Save step-by-step processing images to outputs folder."""
+        saved_paths = {}
+        for step_name, img in self.processing_steps.items():
+            path = os.path.join(OUTPUTS_DIR, f"{output_prefix}_{step_name}.png")
+            cv2.imwrite(path, img)
+            saved_paths[step_name] = path
+        return saved_paths
