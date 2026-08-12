@@ -784,6 +784,44 @@
             `).join('');
         }
 
+        async function runProcessingPipeline() {
+            const imageName = document.getElementById('sheetSelect').value;
+            const statusLbl = document.getElementById('procStatus');
+            statusLbl.textContent = 'Processing Computer Vision Pipeline...';
+
+            const res = await fetch('/api/process_image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image_name: imageName })
+            });
+
+            const data = await res.json();
+            statusLbl.textContent = 'Completed!';
+
+            renderPipelineData(data);
+        }
+
+        async function loadStudentAnalytics() {
+            const studentIdx = document.getElementById('vizStudentSelect').value;
+            if (!studentIdx) return;
+
+            const res = await fetch(`/api/student_stats/${studentIdx}`);
+            const data = await res.json();
+
+            const history = data.history || [];
+            const total = history.length;
+            const present = history.filter(h => h.status === 'PRESENT').length;
+            const absent = total - present;
+            const rate = total > 0 ? ((present / total) * 100).toFixed(1) : 0;
+
+            document.getElementById('kpiRate').textContent = `${rate}%`;
+            document.getElementById('kpiTotal').textContent = total;
+            document.getElementById('kpiPresent').textContent = present;
+            document.getElementById('kpiAbsent').textContent = absent;
+
+            renderCharts(present, absent, history);
+        }
+
      </script>
 </body>
 </html>
