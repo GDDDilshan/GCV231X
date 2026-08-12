@@ -765,6 +765,25 @@
                 </div>
             `).join('');
 
+            const tbody = document.getElementById('resultsTbody');
+            tbody.innerHTML = data.results.map(r => `
+                <tr>
+                    <td>${r.no}</td>
+                    <td><strong>${r.student_index}</strong></td>
+                    <td>${r.name}</td>
+                    <td>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <span>${r.ink_density}%</span>
+                            <div style="width:100px; height:7px; background:#e2e8f0; border-radius:4px; overflow:hidden;">
+                                <div style="width:${Math.min(100, r.ink_density * 3.5)}%; height:100%; background:var(--accent-gold);"></div>
+                            </div>
+                        </div>
+                    </td>
+                    <td><span class="${r.status === 'PRESENT' ? 'badge-present' : 'badge-absent'}">${r.status}</span></td>
+                </tr>
+            `).join('');
+        }
+
      </script>
 </body>
 </html>
