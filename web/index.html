@@ -704,6 +704,16 @@
             }
         }
 
+
+
+        async function loadStudentsList() {
+            const res = await fetch('/api/students');
+            const data = await res.json();
+            const options = data.students.map(s => `<option value="${s.student_index}">${s.student_index} - ${s.name}</option>`).join('');
+            document.getElementById('vizStudentSelect').innerHTML = options;
+            document.getElementById('verStudentSelect').innerHTML = options;
+        }
+
      </script>
 </body>
 </html>
