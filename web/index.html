@@ -668,3 +668,27 @@
             <img id="modalImg" src="" alt="Full View">
         </div>
     </div>
+
+    <!-- Script -->
+     <script>
+        let donutChartInst = null;
+        let barChartInst = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSampleImages();
+            loadStudentsList();
+        });
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.currentTarget.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+
+            if (tabId === 'tab2') loadStudentAnalytics();
+        }
+
+     </script>
+</body>
+</html>
