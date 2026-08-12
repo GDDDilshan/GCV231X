@@ -746,6 +746,25 @@
             reader.readAsDataURL(file);
         }
 
+        function renderPipelineData(data) {
+            const stepsGrid = document.getElementById('stepsGrid');
+            const stepTitles = {
+                '01_Original': '1. Original Input Photo',
+                '02_Grayscale': '2. Grayscale Filter',
+                '03_Binarized': '3. Adaptive Threshold',
+                '04_Grid_Detection': '4. Table Grid Extraction',
+                '05_Final_Detection': '5. Final Classifications'
+            };
+
+            stepsGrid.innerHTML = Object.entries(data.steps).map(([key, url]) => `
+                <div class="step-card" onclick="openModal('${url}')">
+                    <div class="step-card-header">${stepTitles[key] || key}</div>
+                    <div class="step-img-wrapper">
+                        <img src="${url}?t=${Date.now()}" alt="${key}">
+                    </div>
+                </div>
+            `).join('');
+
      </script>
 </body>
 </html>
