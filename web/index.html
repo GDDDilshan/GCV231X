@@ -714,6 +714,25 @@
             document.getElementById('verStudentSelect').innerHTML = options;
         }
 
+        async function uploadCustomImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const statusLbl = document.getElementById('procStatus');
+            statusLbl.textContent = 'Uploading and processing new signing sheet...';
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const base64Data = e.target.result;
+                const res = await fetch('/api/upload_image', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        filename: file.name,
+                        image_data: base64Data
+                    })
+                });
+
      </script>
 </body>
 </html>
