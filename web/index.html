@@ -733,6 +733,19 @@
                     })
                 });
 
+                const data = await res.json();
+                statusLbl.textContent = 'Uploaded & Processed Successfully!';
+
+                await loadSampleImages();
+                if (data.image_name) {
+                    document.getElementById('sheetSelect').value = data.image_name;
+                }
+
+                renderPipelineData(data);
+            };
+            reader.readAsDataURL(file);
+        }
+
      </script>
 </body>
 </html>
