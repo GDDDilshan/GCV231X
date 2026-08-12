@@ -937,6 +937,36 @@
             });
         }
 
+
+        async function runSignatureVerification() {
+            const studentIdx = document.getElementById('verStudentSelect').value;
+            if (!studentIdx) return;
+
+            const res = await fetch(`/api/verify/${studentIdx}`);
+            const data = await res.json();
+
+            const tbody = document.getElementById('verTbody');
+            tbody.innerHTML = data.report.map(r => `
+                <tr>
+                    <td><strong>${r.date}</strong></td>
+                    <td><span class="${r.status === 'PRESENT' ? 'badge-present' : 'badge-absent'}">${r.status}</span></td>
+                    <td>${r.ssim.toFixed(4)}</td>
+                    <td>${r.orb} keypoints</td>
+                    <td>${r.confidence.toFixed(1)}%</td>
+                    <td><span class="${r.verdict.includes('MATCH') ? 'badge-present' : 'badge-absent'}">${r.verdict}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        function openModal(url) {
+            document.getElementById('modalImg').src = url;
+            document.getElementById('imgModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('imgModal').classList.remove('active');
+        }
+
      </script>
 </body>
 </html>
