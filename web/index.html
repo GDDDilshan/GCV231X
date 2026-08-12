@@ -689,6 +689,21 @@
             if (tabId === 'tab2') loadStudentAnalytics();
         }
 
+        async function loadSampleImages() {
+            const res = await fetch('/api/sample_images');
+            const data = await res.json();
+            const select = document.getElementById('sheetSelect');
+            select.innerHTML = data.images.map(img => `<option value="${img}">${img}</option>`).join('');
+            
+            select.addEventListener('change', () => {
+                document.getElementById('procStatus').textContent = 'Ready to process';
+            });
+
+            if (data.images.length > 0) {
+                runProcessingPipeline();
+            }
+        }
+
      </script>
 </body>
 </html>
