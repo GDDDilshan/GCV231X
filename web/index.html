@@ -670,7 +670,7 @@
     </div>
 
     <!-- Script -->
-     <script>
+    <script>
         let donutChartInst = null;
         let barChartInst = null;
 
@@ -689,6 +689,7 @@
             if (tabId === 'tab2') loadStudentAnalytics();
         }
 
+
         async function loadSampleImages() {
             const res = await fetch('/api/sample_images');
             const data = await res.json();
@@ -703,7 +704,6 @@
                 runProcessingPipeline();
             }
         }
-
 
 
         async function loadStudentsList() {
@@ -966,7 +966,6 @@
         function closeModal() {
             document.getElementById('imgModal').classList.remove('active');
         }
-
-     </script>
+    </script>
 </body>
 </html>
